@@ -1,0 +1,37 @@
+name: Build and Test
+
+on: [push, pull_request] # 当有代码推送或拉取请求时触发
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        # 如果只想测试特定 Python 版本，可以取消下面这行的注释并修改
+        # python-version: ['3.8', '3.9', '3.10']
+
+    steps:
+    - uses: actions/checkout@v3
+
+    # 安装 Python
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    # 安装依赖 (pybind11)
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pybind11 pytest
+
+    # 构建
+    - name: Build extension
+      run: python setup.py build_ext --inplace
+
+    # 测试 (可选)
+    - name: Test
+      run: |
+        python -c "import MathDemo; print(MathDemo.add(1, 2))"
