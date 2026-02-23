@@ -35,3 +35,35 @@ jobs:
     - name: Test
       run: |
         python -c "import MathDemo; print(MathDemo.add(1, 2))"
+
+  # 这个 Job 专门用于将构建好的包上传到 GitHub Release
+  upload_release_assets:
+    name: Upload Release Assets
+    # 需要等待 build_wheels 任务全部完成
+    needs: [build_wheels]
+    # 只有当触发事件是 release 时才运行，避免普通提交也尝试上传
+    if: github.event_name == 'release'
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    permissions:
+      # 必须授予 contents 权限才能上传文件到 Release
+      contents: write
+    steps:
+      - name: Download artifacts
+        # 从上一步 Job 下载构建好的 wheels
+        uses: actions/download-artifact@v3
+        with:
+          name: wheels
+          path: ./dist
+
+      - name: Display structure of downloaded files
+        run: ls -R ./dist
+
+      - name: Upload Release Assets
+        # 使用第三方 action softprops/action-gh-release，这是目前最通用的方式
+        uses: softprops/action-gh-release@v1
+        with:
+          # 将 dist 目录下所有 .whl 文件上传
+          files: ./dist/*.whl
+        env:
+          # GITHUB_TOKEN 由 GitHub 自动提供，无需手动配置
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        
