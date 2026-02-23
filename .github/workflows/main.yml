@@ -43,7 +43,7 @@ jobs:
     needs: [build_wheels]
     # 只有当触发事件是 release 时才运行，避免普通提交也尝试上传
     if: github.event_name == 'release'
-    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ubuntu-latest
     permissions:
       # 必须授予 contents 权限才能上传文件到 Release
       contents: write
